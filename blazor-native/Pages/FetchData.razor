@@ -7,9 +7,23 @@
 
 <h1>SkiaSharp Canvas</h1>
 
-<SKCanvasView OnPaintSurface="@OnPaintSurface" ActualWidth="640" ActualHeight="480" />
+<div>
+    <SKCanvasView @ref="skiaCanvas" OnPaintSurface="@OnPaintSurface" Width="320" Height="240" IgnorePixelScaling="@ignorePixelScaling" />
+</div>
+
+<div>
+    <button class="btn btn-primary" @onclick="RefreshSurface">Refresh</button>
+    <button class="btn" @onclick="ToggleScaling">Scaling</button>
+</div>
+
+<div>
+    IgnorePixelScaling: @ignorePixelScaling
+</div>
 
 @code {
+    SKCanvasView skiaCanvas = null!;
+    bool ignorePixelScaling = true;
+
     void OnPaintSurface(SKPaintSurfaceEventArgs e)
     {
         var canvas = e.Surface.Canvas;
@@ -32,10 +46,20 @@
         {
             paint.IsAntialias = true;
             paint.Color = SKColors.DarkBlue;
-            paint.TextSize = 48;
+            paint.TextSize = 24;
             paint.TextAlign = SKTextAlign.Center;
 
             canvas.DrawText("SkiaSharp", center.X, (center.Y / 2) + (paint.TextSize / 2), paint);
         }
+    }
+
+    async void RefreshSurface()
+    {
+        await skiaCanvas.InvalidateAsync();
+    }
+
+    void ToggleScaling()
+    {
+        ignorePixelScaling = !ignorePixelScaling;
     }
 }

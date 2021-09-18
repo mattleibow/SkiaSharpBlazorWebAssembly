@@ -1,51 +1,61 @@
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
+using SkiaSharp.Views.Blazor.Internal;
+using System;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 
 namespace SkiaSharp.Views.Blazor
 {
-	public partial class SKCanvasView
+	public partial class SKCanvasView : IDisposable
 	{
-		private SKCanvasViewInterop interop;
+		private SKCanvasViewInterop interop = null!;
+
 		private SKSizeI pixelSize;
-		private byte[] pixels;
+		private byte[]? pixels;
 		private GCHandle pixelsHandle;
 		private bool ignorePixelScaling;
 		private ElementReference htmlCanvas;
 
 		[Inject]
-		IJSRuntime JS { get; set; }
+		IJSRuntime JS { get; set; } = null!;
 
 		[Parameter]
-		public EventCallback<SKPaintSurfaceEventArgs> OnPaintSurface { get; set; }
+		public double Width { get; set; }
 
 		[Parameter]
-		public double ActualWidth { get; set; }
+		public double Height { get; set; }
 
 		[Parameter]
-		public double ActualHeight { get; set; }
-
-		double Dpi { get; } = 1;
-
-		public SKSize CanvasSize { get; private set; }
-
 		public bool IgnorePixelScaling
 		{
 			get => ignorePixelScaling;
 			set
 			{
-				ignorePixelScaling = value;
-				//Invalidate();
+				if (ignorePixelScaling != value)
+				{
+					ignorePixelScaling = value;
+					Invalidate();
+				}
 			}
 		}
+
+		[Parameter]
+		public EventCallback<SKPaintSurfaceEventArgs> OnPaintSurface { get; set; }
+
+		public double Dpi { get; private set; }
+
+		public SKSize CanvasSize { get; private set; }
 
 		protected override async Task OnAfterRenderAsync(bool firstRender)
 		{
 			if (firstRender)
 			{
-				interop = new SKCanvasViewInterop(JS, htmlCanvas);
+				DpiWatcherInterop.Init(JS);
+				DpiWatcherInterop.DpiChanged += OnDpiChanged;
 
+				interop = new SKCanvasViewInterop(JS);
+				Dpi = await interop.GetDensityAsync();
 				await InvalidateAsync();
 			}
 		}
@@ -55,38 +65,42 @@ namespace SkiaSharp.Views.Blazor
 			return OnPaintSurface.InvokeAsync(e);
 		}
 
+		public async void Invalidate()
+		{
+			await InvalidateAsync();
+		}
+
 		public async Task InvalidateAsync()
 		{
-			if (ActualWidth <= 0 || ActualHeight <= 0)
+			if (Width <= 0 || Height <= 0 || Dpi <= 0)
 			{
 				CanvasSize = SKSize.Empty;
 				return;
 			}
 
-			var info = CreateBitmap(out var unscaledSize, out var dpi);
+			var info = CreateBitmap(out var unscaledSize);
+			var userVisibleSize = IgnorePixelScaling ? unscaledSize : info.Size;
 
 			using (var surface = SKSurface.Create(info, pixelsHandle.AddrOfPinnedObject(), info.RowBytes))
 			{
-				var userVisibleSize = IgnorePixelScaling ? unscaledSize : info.Size;
-
 				CanvasSize = userVisibleSize;
 
 				if (IgnorePixelScaling)
 				{
 					var canvas = surface.Canvas;
-					canvas.Scale(dpi);
+					canvas.Scale((float)Dpi);
 					canvas.Save();
 				}
 
 				await InvokeOnPaintSurfaceAsync(new SKPaintSurfaceEventArgs(surface, info.WithSize(userVisibleSize), info));
 			}
 
-			await interop.InvalidateCanvasAsync(pixelsHandle.AddrOfPinnedObject(), info);
+			await interop.InvalidateCanvasAsync(htmlCanvas, pixelsHandle.AddrOfPinnedObject(), unscaledSize, info.Size);
 		}
 
-		private SKImageInfo CreateBitmap(out SKSizeI unscaledSize, out float dpi)
+		private SKImageInfo CreateBitmap(out SKSizeI unscaledSize)
 		{
-			var size = CreateSize(out unscaledSize, out dpi);
+			var size = CreateSize(out unscaledSize);
 			var info = new SKImageInfo(size.Width, size.Height, SKImageInfo.PlatformColorType, SKAlphaType.Opaque);
 
 			if (pixels == null || pixelSize.Width != info.Width || pixelSize.Height != info.Height)
@@ -101,19 +115,18 @@ namespace SkiaSharp.Views.Blazor
 			return info;
 		}
 
-		private SKSizeI CreateSize(out SKSizeI unscaledSize, out float dpi)
+		private SKSizeI CreateSize(out SKSizeI unscaledSize)
 		{
 			unscaledSize = SKSizeI.Empty;
-			dpi = (float)Dpi;
 
-			var w = ActualWidth;
-			var h = ActualHeight;
+			var w = Width;
+			var h = Height;
 
 			if (!IsPositive(w) || !IsPositive(h))
 				return SKSizeI.Empty;
 
 			unscaledSize = new SKSizeI((int)w, (int)h);
-			return new SKSizeI((int)(w * dpi), (int)(h * dpi));
+			return new SKSizeI((int)(w * Dpi), (int)(h * Dpi));
 
 			static bool IsPositive(double value)
 			{
@@ -128,6 +141,17 @@ namespace SkiaSharp.Views.Blazor
 				pixelsHandle.Free();
 				pixels = null;
 			}
+		}
+
+		private void OnDpiChanged(double newDpi)
+		{
+			Dpi = newDpi;
+			Invalidate();
+		}
+
+		public void Dispose()
+		{
+			DpiWatcherInterop.DpiChanged -= OnDpiChanged;
 		}
 	}
 }

@@ -9,14 +9,13 @@ namespace SkiaSharp.Views.Blazor
 	{
 		private const string JsFilename = "./_content/SkiaSharp.Views.Blazor/SKCanvasViewInterop.js";
 		private const string InvalidateSymbol = "SKCanvasView.invalidateCanvas";
+		private const string GetDensitySymbol = "SKCanvasView.getDensity";
 
 		private readonly Lazy<Task<IJSObjectReference>> moduleTask;
-		private readonly ElementReference htmlCanvas;
 
-		public SKCanvasViewInterop(IJSRuntime js, ElementReference htmlCanvas)
+		public SKCanvasViewInterop(IJSRuntime js)
 		{
 			moduleTask = new(() => js.InvokeAsync<IJSObjectReference>("import", JsFilename).AsTask());
-			this.htmlCanvas = htmlCanvas;
 		}
 
 		public async ValueTask DisposeAsync()
@@ -29,11 +28,23 @@ namespace SkiaSharp.Views.Blazor
 			await module.DisposeAsync();
 		}
 
-		public async Task<bool> InvalidateCanvasAsync(IntPtr intPtr, SKImageInfo info)
+		public async Task<bool> InvalidateCanvasAsync(ElementReference htmlCanvas, IntPtr intPtr, SKSizeI canvasSize, SKSizeI rawSize)
 		{
 			var module = await moduleTask.Value;
 
-			return await module.InvokeAsync<bool>(InvalidateSymbol, intPtr.ToInt64(), htmlCanvas, info.Width, info.Height);
+			return await module.InvokeAsync<bool>(
+				InvalidateSymbol,
+				htmlCanvas,
+				intPtr.ToInt64(),
+				canvasSize.Width, canvasSize.Height,
+				rawSize.Width, rawSize.Height);
+		}
+
+		public async Task<double> GetDensityAsync()
+		{
+			var module = await moduleTask.Value;
+
+			return await module.InvokeAsync<double>(GetDensitySymbol);
 		}
 	}
 }
