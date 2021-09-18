@@ -3,7 +3,7 @@ using Microsoft.JSInterop;
 using System;
 using System.Threading.Tasks;
 
-namespace SkiaSharp.Views.Blazor
+namespace SkiaSharp.Views.Blazor.Internal
 {
 	internal class SKCanvasViewInterop : IAsyncDisposable
 	{
