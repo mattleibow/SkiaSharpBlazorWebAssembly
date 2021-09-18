@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31717.149
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "blazor-native", "blazor-native\blazor-native.csproj", "{9E2EAE6A-F845-4619-9388-DA08954DC0C6}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SkiaSharp.Views.Blazor", "SkiaSharp.Views.Blazor\SkiaSharp.Views.Blazor.csproj", "{44901DA3-B5D8-46EA-A7E7-B0A7B1C08AA6}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{9E2EAE6A-F845-4619-9388-DA08954DC0C6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9E2EAE6A-F845-4619-9388-DA08954DC0C6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9E2EAE6A-F845-4619-9388-DA08954DC0C6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9E2EAE6A-F845-4619-9388-DA08954DC0C6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{44901DA3-B5D8-46EA-A7E7-B0A7B1C08AA6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{44901DA3-B5D8-46EA-A7E7-B0A7B1C08AA6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{44901DA3-B5D8-46EA-A7E7-B0A7B1C08AA6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{44901DA3-B5D8-46EA-A7E7-B0A7B1C08AA6}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {E05D6D98-130F-4EF1-9B6B-431C06C35419}
+	EndGlobalSection
+EndGlobal
