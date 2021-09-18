@@ -9,7 +9,6 @@ namespace SkiaSharp.Views.Blazor.Internal
 	{
 		private const string JsFilename = "./_content/SkiaSharp.Views.Blazor/SKCanvasViewInterop.js";
 		private const string InvalidateSymbol = "SKCanvasView.invalidateCanvas";
-		private const string GetDensitySymbol = "SKCanvasView.getDensity";
 
 		private readonly Lazy<Task<IJSObjectReference>> moduleTask;
 
@@ -38,13 +37,6 @@ namespace SkiaSharp.Views.Blazor.Internal
 				intPtr.ToInt64(),
 				canvasSize.Width, canvasSize.Height,
 				rawSize.Width, rawSize.Height);
-		}
-
-		public async Task<double> GetDensityAsync()
-		{
-			var module = await moduleTask.Value;
-
-			return await module.InvokeAsync<double>(GetDensitySymbol);
 		}
 	}
 }

@@ -10,6 +10,7 @@ namespace SkiaSharp.Views.Blazor.Internal
 		private const string JsFilename = "./_content/SkiaSharp.Views.Blazor/DpiWatcherInterop.js";
 		private const string StartSymbol = "DpiWatcher.start";
 		private const string StopSymbol = "DpiWatcher.stop";
+		private const string GetDpiSymbol = "DpiWatcher.getDpi";
 
 		private static Lazy<Task<IJSObjectReference>> moduleTask = null!;
 		private static event Action<double>? DpiChangedInternal;
@@ -60,7 +61,12 @@ namespace SkiaSharp.Views.Blazor.Internal
 
 			await module.InvokeVoidAsync(StopSymbol);
 		}
+
+		public static async Task<double> GetDpiAsync()
+		{
+			var module = await moduleTask.Value;
+
+			return await module.InvokeAsync<double>(GetDpiSymbol);
+		}
 	}
-
-
 }

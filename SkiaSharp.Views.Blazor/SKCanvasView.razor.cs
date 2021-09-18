@@ -51,12 +51,12 @@ namespace SkiaSharp.Views.Blazor
 		{
 			if (firstRender)
 			{
+				interop = new SKCanvasViewInterop(JS);
+
 				DpiWatcherInterop.Init(JS);
 				DpiWatcherInterop.DpiChanged += OnDpiChanged;
 
-				interop = new SKCanvasViewInterop(JS);
-				Dpi = await interop.GetDensityAsync();
-				await InvalidateAsync();
+				OnDpiChanged(await DpiWatcherInterop.GetDpiAsync());
 			}
 		}
 
@@ -146,6 +146,7 @@ namespace SkiaSharp.Views.Blazor
 		private void OnDpiChanged(double newDpi)
 		{
 			Dpi = newDpi;
+
 			Invalidate();
 		}
 

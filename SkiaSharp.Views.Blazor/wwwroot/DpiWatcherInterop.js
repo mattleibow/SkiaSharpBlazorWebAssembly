@@ -1,5 +1,9 @@
 
 export class DpiWatcher {
+    static getDpi() {
+        return window.devicePixelRatio;
+    }
+
     static start() {
         DpiWatcher.lastDpi = window.devicePixelRatio;
         DpiWatcher.timerId = window.setInterval(DpiWatcher.update, 1000);
