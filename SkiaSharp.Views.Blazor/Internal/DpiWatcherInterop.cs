@@ -5,7 +5,17 @@ using System.Threading.Tasks;
 
 namespace SkiaSharp.Views.Blazor.Internal
 {
-	public static class DpiWatcherInterop
+	[EditorBrowsable(EditorBrowsableState.Never)]
+	public class DpiWatcherInteropCallback
+	{
+		[JSInvokable]
+		public static void UpdateDpi(double oldDpi, double newDpi)
+		{
+			DpiWatcherInterop.UpdateDpi(oldDpi, newDpi);
+		}
+	}
+
+	internal static class DpiWatcherInterop
 	{
 		private const string JsFilename = "./_content/SkiaSharp.Views.Blazor/DpiWatcher.js";
 		private const string StartSymbol = "DpiWatcher.start";
@@ -33,14 +43,12 @@ namespace SkiaSharp.Views.Blazor.Internal
 			}
 		}
 
-		[JSInvokable]
-		[EditorBrowsable(EditorBrowsableState.Never)]
 		public static void UpdateDpi(double oldDpi, double newDpi)
 		{
 			DpiChangedInternal?.Invoke(newDpi);
 		}
 
-		internal static void Init(IJSRuntime js)
+		public static void Init(IJSRuntime js)
 		{
 			if (moduleTask != null)
 				return;

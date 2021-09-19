@@ -8,7 +8,7 @@ namespace SkiaSharp.Views.Blazor.Internal
 	internal class SKCanvasViewInterop : IAsyncDisposable
 	{
 		private const string JsFilename = "./_content/SkiaSharp.Views.Blazor/SKCanvasView.js";
-		private const string InvalidateSymbol = "SKCanvasView.invalidateCanvas";
+		private const string InvalidateSymbol = "SKCanvasView.invalidate";
 
 		private readonly Lazy<Task<IJSObjectReference>> moduleTask;
 
