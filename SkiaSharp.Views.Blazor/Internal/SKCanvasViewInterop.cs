@@ -7,7 +7,7 @@ namespace SkiaSharp.Views.Blazor.Internal
 {
 	internal class SKCanvasViewInterop : IAsyncDisposable
 	{
-		private const string JsFilename = "./_content/SkiaSharp.Views.Blazor/SKCanvasViewInterop.js";
+		private const string JsFilename = "./_content/SkiaSharp.Views.Blazor/SKCanvasView.js";
 		private const string InvalidateSymbol = "SKCanvasView.invalidateCanvas";
 
 		private readonly Lazy<Task<IJSObjectReference>> moduleTask;
@@ -27,7 +27,7 @@ namespace SkiaSharp.Views.Blazor.Internal
 			await module.DisposeAsync();
 		}
 
-		public async Task<bool> InvalidateCanvasAsync(ElementReference htmlCanvas, IntPtr intPtr, SKSizeI canvasSize, SKSizeI rawSize)
+		public async Task<bool> InvalidateCanvasAsync(ElementReference htmlCanvas, IntPtr intPtr, SKSizeI rawSize)
 		{
 			var module = await moduleTask.Value;
 
@@ -35,7 +35,6 @@ namespace SkiaSharp.Views.Blazor.Internal
 				InvalidateSymbol,
 				htmlCanvas,
 				intPtr.ToInt64(),
-				canvasSize.Width, canvasSize.Height,
 				rawSize.Width, rawSize.Height);
 		}
 	}

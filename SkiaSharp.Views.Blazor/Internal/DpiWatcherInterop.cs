@@ -7,7 +7,7 @@ namespace SkiaSharp.Views.Blazor.Internal
 {
 	public static class DpiWatcherInterop
 	{
-		private const string JsFilename = "./_content/SkiaSharp.Views.Blazor/DpiWatcherInterop.js";
+		private const string JsFilename = "./_content/SkiaSharp.Views.Blazor/DpiWatcher.js";
 		private const string StartSymbol = "DpiWatcher.start";
 		private const string StopSymbol = "DpiWatcher.stop";
 		private const string GetDpiSymbol = "DpiWatcher.getDpi";

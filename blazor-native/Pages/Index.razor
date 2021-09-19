@@ -1,7 +1,89 @@
 ﻿@page "/"
 
-<h1>Hello, world!</h1>
+@using SkiaSharp
+@using SkiaSharp.Views.Blazor
 
-Welcome to your new app.
+<h1>SkiaSharp Canvas</h1>
 
-<SurveyPrompt Title="How is Blazor working for you?" />
+<div>
+    <SKCanvasView @ref="skiaCanvas" OnPaintSurface="@OnPaintSurface" Width="320" Height="240" IgnorePixelScaling="@ignorePixelScaling" />
+</div>
+
+<div>
+    <SKGLView @ref="glCanvas" OnPaintSurface="@OnPaintGLSurface" Width="320" Height="240" EnableRenderLoop="@renderLoop" />
+</div>
+
+<div>
+    <button class="btn btn-primary" @onclick="RefreshSurface">Refresh</button>
+    <button class="btn" @onclick="ToggleScaling">Scaling</button>
+    <button class="btn" @onclick="ToggleRenderLoop">Render Loop</button>
+</div>
+
+<div>
+    IgnorePixelScaling: @ignorePixelScaling
+</div>
+
+@code {
+    SKCanvasView skiaCanvas = null!;
+    SKGLView glCanvas = null!;
+    bool ignorePixelScaling = true;
+    bool renderLoop = false;
+
+    void OnPaintSurface(SKPaintSurfaceEventArgs e)
+    {
+        var canvas = e.Surface.Canvas;
+        var info = e.Info.Size;
+        Paint(canvas, info);
+    }
+
+    void OnPaintGLSurface(SKPaintGLSurfaceEventArgs e)
+    {
+        var canvas = e.Surface.Canvas;
+        var info = e.BackendRenderTarget.Size;
+        Paint(canvas, info);
+    }
+
+    void Paint(SKCanvas canvas, SKSizeI info)
+    {
+        var colors = new[] { SKColors.Cyan, SKColors.Magenta, SKColors.Yellow, SKColors.Cyan };
+        var center = new SKPoint(info.Width / 2, info.Height / 2);
+
+        canvas.Clear(SKColors.Transparent);
+
+        using (var paint = new SKPaint())
+        using (var gradient = SKShader.CreateSweepGradient(center, colors))
+        {
+            paint.IsAntialias = true;
+            paint.Shader = gradient;
+
+            canvas.DrawRoundRect(new SKRect(5, 5, info.Width - 5, info.Height - 5), 25, 25, paint);
+        }
+
+        using (var paint = new SKPaint())
+        {
+            paint.IsAntialias = true;
+            paint.Color = SKColors.DarkBlue;
+            paint.TextSize = 24;
+            paint.TextAlign = SKTextAlign.Center;
+
+            canvas.DrawText("SkiaSharp", center.X, (center.Y / 2) + (paint.TextSize / 2), paint);
+            canvas.DrawText(DateTime.Now.ToString("HH:mm:ss"), center.X, (center.Y / 2) + (paint.TextSize * 2), paint);
+        }
+    }
+
+    async void RefreshSurface()
+    {
+        await skiaCanvas.InvalidateAsync();
+        await glCanvas.InvalidateAsync();
+    }
+
+    void ToggleScaling()
+    {
+        ignorePixelScaling = !ignorePixelScaling;
+    }
+
+    void ToggleRenderLoop()
+    {
+        renderLoop = !renderLoop;
+    }
+}

@@ -95,7 +95,7 @@ namespace SkiaSharp.Views.Blazor
 				await InvokeOnPaintSurfaceAsync(new SKPaintSurfaceEventArgs(surface, info.WithSize(userVisibleSize), info));
 			}
 
-			await interop.InvalidateCanvasAsync(htmlCanvas, pixelsHandle.AddrOfPinnedObject(), unscaledSize, info.Size);
+			await interop.InvalidateCanvasAsync(htmlCanvas, pixelsHandle.AddrOfPinnedObject(), info.Size);
 		}
 
 		private SKImageInfo CreateBitmap(out SKSizeI unscaledSize)
