@@ -43,12 +43,12 @@ export class SKGLView {
         if (renderLoop !== undefined && htmlCanvas.SKGLView.renderLoopEnabled !== renderLoop)
             SKGLView.setEnableRenderLoop(htmlCanvas, renderLoop);
 
+        // make sure the canvas is scaled correctly for the drawing
+        SKGLView.resizeCanvas(htmlCanvas, width, height);
+
         // skip because we have a render loop
         if (htmlCanvas.SKGLView.renderLoopRequest !== 0)
             return;
-
-        // make sure the canvas is scaled correctly for the drawing
-        SKGLView.resizeCanvas(htmlCanvas, width, height);
 
         // add the draw to the next frame
         htmlCanvas.SKGLView.renderLoopRequest = window.requestAnimationFrame(() => {

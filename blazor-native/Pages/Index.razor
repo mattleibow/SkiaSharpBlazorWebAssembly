@@ -27,23 +27,44 @@
     SKCanvasView skiaCanvas = null!;
     SKGLView glCanvas = null!;
     bool ignorePixelScaling = true;
-    bool renderLoop = false;
+    bool renderLoop = true;
+
+    int tickIndex = 0;
+    int tickSum = 0;
+    int[] tickList = new int[100];
+    int lastTick = Math.Abs(Environment.TickCount);
+
+    double CalcAverageTick()
+    {
+        var newTick = Math.Abs(Environment.TickCount);
+        var delta = Math.Max(newTick, lastTick) - Math.Min(newTick, lastTick);
+        lastTick = newTick;
+
+        tickSum -= tickList[tickIndex];
+        tickSum += delta;
+        tickList[tickIndex] = delta;
+
+        if (++tickIndex == tickList.Length)
+            tickIndex = 0;
+
+        return ((double)tickSum / tickList.Length);
+    }
 
     void OnPaintSurface(SKPaintSurfaceEventArgs e)
     {
         var canvas = e.Surface.Canvas;
         var info = e.Info.Size;
-        Paint(canvas, info);
+        Paint(canvas, info, false);
     }
 
     void OnPaintGLSurface(SKPaintGLSurfaceEventArgs e)
     {
         var canvas = e.Surface.Canvas;
         var info = e.BackendRenderTarget.Size;
-        Paint(canvas, info);
+        Paint(canvas, info, true);
     }
 
-    void Paint(SKCanvas canvas, SKSizeI info)
+    void Paint(SKCanvas canvas, SKSizeI info, bool fps)
     {
         var colors = new[] { SKColors.Cyan, SKColors.Magenta, SKColors.Yellow, SKColors.Cyan };
         var center = new SKPoint(info.Width / 2, info.Height / 2);
@@ -66,8 +87,11 @@
             paint.TextSize = 24;
             paint.TextAlign = SKTextAlign.Center;
 
-            canvas.DrawText("SkiaSharp", center.X, (center.Y / 2) + (paint.TextSize / 2), paint);
-            canvas.DrawText(DateTime.Now.ToString("HH:mm:ss"), center.X, (center.Y / 2) + (paint.TextSize * 2), paint);
+            canvas.DrawText("SkiaSharp", center.X, (center.Y / 2), paint);
+            canvas.DrawText(DateTime.Now.ToString("HH:mm:ss"), center.X, (center.Y / 2) + paint.TextSize, paint);
+
+            if (fps)
+                canvas.DrawText(CalcAverageTick().ToString("0.00") + "fps", center.X, (center.Y / 2) + (paint.TextSize * 2), paint);
         }
     }
 
