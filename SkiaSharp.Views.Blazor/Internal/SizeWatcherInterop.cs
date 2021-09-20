@@ -5,62 +5,48 @@ using System.Threading.Tasks;
 
 namespace SkiaSharp.Views.Blazor.Internal
 {
-	internal class SizeWatcherInterop : IAsyncDisposable
+	internal class SizeWatcherInterop : JSModuleInterop
 	{
 		private const string JsFilename = "./_content/SkiaSharp.Views.Blazor/SizeWatcher.js";
 		private const string ObserveSymbol = "SizeWatcher.observe";
 		private const string UnobserveSymbol = "SizeWatcher.unobserve";
 
-		private readonly Lazy<Task<IJSObjectReference>> moduleTask;
+		private readonly ElementReference htmlElement;
+		private readonly string htmlElementId;
+		private readonly FloatFloatActionHelper callbackHelper;
 
-		private ElementReference htmlElement;
-		private DotNetObjectReference<SizeActionHelper>? reference;
+		private DotNetObjectReference<FloatFloatActionHelper>? callbackReference;
 
-		public SizeWatcherInterop(IJSRuntime js)
+		public SizeWatcherInterop(IJSRuntime js, ElementReference element, Action<SKSize> callback)
+			: base(js, JsFilename)
 		{
-			if (moduleTask != null)
-				return;
-
-			moduleTask = new(() => js.InvokeAsync<IJSObjectReference>("import", JsFilename).AsTask());
-		}
-
-		public async ValueTask DisposeAsync()
-		{
-			if (!moduleTask.IsValueCreated)
-				return;
-
-			await UnobserveAsync();
-
-			var module = await moduleTask.Value;
-
-			await module.DisposeAsync();
-		}
-
-		public async Task ObserveAsync(ElementReference element, Action<SKSize> callback)
-		{
-			var module = await moduleTask.Value;
-
 			htmlElement = element;
-
-			var helper = new SizeActionHelper(callback);
-			reference = DotNetObjectReference.Create(helper);
-
-			await module.InvokeVoidAsync(ObserveSymbol, element, reference);
+			htmlElementId = element.Id;
+			callbackHelper = new FloatFloatActionHelper((x, y) => callback(new SKSize(x, y)));
 		}
 
-		public async Task UnobserveAsync()
+		protected override Task OnDisposingModuleAsync() =>
+			StopAsync();
+
+		public async Task StartAsync()
 		{
-			if (!moduleTask.IsValueCreated || reference == null)
+			if (callbackReference != null)
 				return;
 
-			var module = await moduleTask.Value;
+			callbackReference = DotNetObjectReference.Create(callbackHelper);
 
-			await module.InvokeVoidAsync(UnobserveSymbol, htmlElement);
+			await InvokeAsync(ObserveSymbol, htmlElement, htmlElementId, callbackReference);
+		}
 
-			reference?.Dispose();
-			reference = null;
+		public async Task StopAsync()
+		{
+			if (callbackReference == null)
+				return;
 
-			htmlElement = default;
+			await InvokeAsync(UnobserveSymbol, htmlElementId);
+
+			callbackReference?.Dispose();
+			callbackReference = null;
 		}
 	}
 }

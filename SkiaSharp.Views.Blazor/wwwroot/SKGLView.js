@@ -1,4 +1,3 @@
-/// <reference path="types/dotnet/index.d.ts" />
 export class SKGLView {
     constructor(element, callback) {
         this.renderLoopEnabled = false;
@@ -22,15 +21,29 @@ export class SKGLView {
         };
         this.renderFrameCallback = callback;
     }
-    static init(element, callback) {
+    static init(element, elementId, callback) {
         var htmlCanvas = element;
         if (!htmlCanvas) {
             console.error(`No canvas element was provided.`);
             return null;
         }
+        if (!SKGLView.elements)
+            SKGLView.elements = new Map();
+        SKGLView.elements[elementId] = element;
         const view = new SKGLView(element, callback);
         htmlCanvas.SKGLView = view;
         return view.info;
+    }
+    static deinit(elementId) {
+        if (!elementId)
+            return;
+        const element = SKGLView.elements[elementId];
+        SKGLView.elements.delete(elementId);
+        const htmlCanvas = element;
+        if (!htmlCanvas || !htmlCanvas.SKGLView)
+            return;
+        htmlCanvas.SKGLView.deinit();
+        htmlCanvas.SKGLView = undefined;
     }
     static requestAnimationFrame(element, renderLoop, width, height) {
         const htmlCanvas = element;
@@ -43,6 +56,9 @@ export class SKGLView {
         if (!htmlCanvas || !htmlCanvas.SKGLView)
             return;
         htmlCanvas.SKGLView.setEnableRenderLoop(enable);
+    }
+    deinit() {
+        this.setEnableRenderLoop(false);
     }
     requestAnimationFrame(renderLoop, width, height) {
         // optionally update the render loop
@@ -58,6 +74,8 @@ export class SKGLView {
             return;
         // add the draw to the next frame
         this.renderLoopRequest = window.requestAnimationFrame(() => {
+            // make current
+            GL.makeContextCurrent(this.info.context);
             this.renderFrameCallback
                 .invokeMethodAsync('Invoke')
                 .then(() => {
@@ -72,6 +90,7 @@ export class SKGLView {
         this.renderLoopEnabled = enable;
         // either start the new frame or cancel the existing one
         if (enable) {
+            console.info(`Enabling render loop with callback ${this.renderFrameCallback._id}...`);
             this.requestAnimationFrame();
         }
         else if (this.renderLoopRequest !== 0) {

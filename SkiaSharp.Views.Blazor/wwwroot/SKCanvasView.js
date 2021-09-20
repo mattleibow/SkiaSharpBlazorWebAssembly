@@ -1,5 +1,3 @@
-/// <reference path="types/dotnet/index.d.ts" />
-/// <reference path="types/emscripten/index.d.ts" />
 export class SKCanvasView {
     static invalidate(htmlCanvas, pData, width, height) {
         if (!htmlCanvas) {

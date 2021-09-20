@@ -21,6 +21,14 @@
             <SKGLView @ref="glCanvas" OnPaintSurface="@OnPaintGLSurface" EnableRenderLoop="@renderLoop" class="skiaCanvas" />
         </div>
     </div>
+    <div class="row">
+        <div class="col-6">
+            <SKCanvasView @ref="skiaCanvas2" OnPaintSurface="@OnPaintSurface" IgnorePixelScaling="@ignorePixelScaling" class="skiaCanvas" />
+        </div>
+        <div class="col-6">
+            <SKGLView @ref="glCanvas2" OnPaintSurface="@OnPaintGLSurface" EnableRenderLoop="@(!renderLoop)" class="skiaCanvas" />
+        </div>
+    </div>
 </div>
 
 <div>
@@ -35,7 +43,9 @@
 
 @code {
     SKCanvasView skiaCanvas = null!;
+    SKCanvasView skiaCanvas2 = null!;
     SKGLView glCanvas = null!;
+    SKGLView glCanvas2 = null!;
     bool ignorePixelScaling = true;
     bool renderLoop = true;
 
@@ -82,7 +92,7 @@
         canvas.Clear(SKColors.Transparent);
 
         using (var paint = new SKPaint())
-        using (var gradient = SKShader.CreateSweepGradient(center, colors))
+        using (var gradient = SKShader.CreateLinearGradient(new SKPoint(0, 0), new SKPoint(0, info.Height), colors, SKShaderTileMode.Clamp))
         {
             paint.IsAntialias = true;
             paint.Shader = gradient;
@@ -108,7 +118,9 @@
     async void RefreshSurface()
     {
         await skiaCanvas.InvalidateAsync();
+        await skiaCanvas2.InvalidateAsync();
         await glCanvas.InvalidateAsync();
+        await glCanvas2.InvalidateAsync();
     }
 
     void ToggleScaling()

@@ -1,5 +1,3 @@
-/// <reference path="types/dotnet/index.d.ts" />
-/// <reference path="types/emscripten/index.d.ts" />
 
 declare let Module: EmscriptenModule;
 

@@ -11,7 +11,8 @@ namespace SkiaSharp.Views.Blazor
 	{
 		private SKGLViewInterop interop = null!;
 		private SizeWatcherInterop sizeWatcher = null!;
-		private SKGLViewInterop.Info? jsInfo;
+		private DpiWatcherInterop dpiWatcher = null!;
+		private SKGLViewInterop.Info jsInfo = null!;
 		private ElementReference htmlCanvas;
 
 		private const int ResourceCacheBytes = 256 * 1024 * 1024; // 256 MB
@@ -55,22 +56,15 @@ namespace SkiaSharp.Views.Blazor
 		{
 			if (firstRender)
 			{
-				interop = new SKGLViewInterop(JS, RenderFrame);
-				jsInfo = await interop.InitAsync(htmlCanvas);
+				interop = new SKGLViewInterop(JS, htmlCanvas, OnRenderFrame);
+				jsInfo = await interop.InitAsync();
 
-				DpiWatcherInterop.Init(JS);
-				DpiWatcherInterop.DpiChanged += OnDpiChanged;
+				sizeWatcher = new SizeWatcherInterop(JS, htmlCanvas, OnSizeChanged);
+				await sizeWatcher.StartAsync();
 
-				sizeWatcher = new SizeWatcherInterop(JS);
-				await sizeWatcher.ObserveAsync(htmlCanvas, OnSizeChanged);
-
-				OnDpiChanged(await DpiWatcherInterop.GetDpiAsync());
+				dpiWatcher = DpiWatcherInterop.Get(JS);
+				await dpiWatcher.SubscribeAsync(OnDpiChanged);
 			}
-		}
-
-		protected virtual Task InvokeOnPaintSurfaceAsync(SKPaintGLSurfaceEventArgs e)
-		{
-			return OnPaintSurface.InvokeAsync(e);
 		}
 
 		public async void Invalidate()
@@ -83,10 +77,10 @@ namespace SkiaSharp.Views.Blazor
 			if (canvasSize.Width <= 0 || canvasSize.Height <= 0 || dpi <= 0 || jsInfo == null)
 				return;
 
-			await interop.RequestAnimationFrameAsync(htmlCanvas, EnableRenderLoop, (int)(canvasSize.Width * dpi), (int)(canvasSize.Height * dpi));
+			await interop.RequestAnimationFrameAsync(EnableRenderLoop, (int)(canvasSize.Width * dpi), (int)(canvasSize.Height * dpi));
 		}
 
-		private void RenderFrame()
+		private void OnRenderFrame()
 		{
 			if (canvasSize.Width <= 0 || canvasSize.Height <= 0 || dpi <= 0 || jsInfo == null)
 				return;
@@ -132,7 +126,7 @@ namespace SkiaSharp.Views.Blazor
 			using (new SKAutoCanvasRestore(canvas, true))
 			{
 				// start drawing
-				InvokeOnPaintSurfaceAsync(new SKPaintGLSurfaceEventArgs(surface, renderTarget, surfaceOrigin, colorType));
+				OnPaintSurface.InvokeAsync(new SKPaintGLSurfaceEventArgs(surface, renderTarget, surfaceOrigin, colorType));
 			}
 
 			// update the control
@@ -172,11 +166,9 @@ namespace SkiaSharp.Views.Blazor
 
 		public async ValueTask DisposeAsync()
 		{
-			DpiWatcherInterop.DpiChanged -= OnDpiChanged;
-
-			await interop.DisposeAsync();
-
+			await dpiWatcher.UnsubscribeAsync(OnDpiChanged);
 			await sizeWatcher.DisposeAsync();
+			await interop.DisposeAsync();
 		}
 	}
 }

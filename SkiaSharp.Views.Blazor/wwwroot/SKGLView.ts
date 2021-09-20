@@ -1,4 +1,3 @@
-/// <reference path="types/dotnet/index.d.ts" />
 
 declare let GL: any;
 declare let GLctx: WebGLRenderingContext;
@@ -16,24 +15,45 @@ type SKGLViewCanvasElement = {
 } & HTMLCanvasElement
 
 export class SKGLView {
+    static elements: Map<string, HTMLCanvasElement>;
+
     htmlCanvas: HTMLCanvasElement;
     info: SKGLViewInfo;
-    renderFrameCallback: DotNet.DotNetObject;
+    renderFrameCallback: DotNet.DotNetObjectReference;
     renderLoopEnabled: boolean = false;
     renderLoopRequest: number = 0;
 
-    public static init(element: HTMLCanvasElement, callback: DotNet.DotNetObject): SKGLViewInfo {
+    public static init(element: HTMLCanvasElement, elementId: string, callback: DotNet.DotNetObjectReference): SKGLViewInfo {
         var htmlCanvas = element as SKGLViewCanvasElement;
         if (!htmlCanvas) {
             console.error(`No canvas element was provided.`);
             return null;
         }
 
+        if (!SKGLView.elements)
+            SKGLView.elements = new Map<string, HTMLCanvasElement>();
+        SKGLView.elements[elementId] = element;
+
         const view = new SKGLView(element, callback);
 
         htmlCanvas.SKGLView = view;
 
         return view.info;
+    }
+
+    public static deinit(elementId: string) {
+        if (!elementId)
+            return;
+
+        const element = SKGLView.elements[elementId];
+        SKGLView.elements.delete(elementId);
+
+        const htmlCanvas = element as SKGLViewCanvasElement;
+        if (!htmlCanvas || !htmlCanvas.SKGLView)
+            return;
+
+        htmlCanvas.SKGLView.deinit();
+        htmlCanvas.SKGLView = undefined;
     }
 
     public static requestAnimationFrame(element: HTMLCanvasElement, renderLoop?: boolean, width?: number, height?: number) {
@@ -44,7 +64,7 @@ export class SKGLView {
         htmlCanvas.SKGLView.requestAnimationFrame(renderLoop, width, height);
     }
 
-    public static setEnableRenderLoop(element: SKGLViewCanvasElement, enable: boolean) {
+    public static setEnableRenderLoop(element: HTMLCanvasElement, enable: boolean) {
         const htmlCanvas = element as SKGLViewCanvasElement;
         if (!htmlCanvas || !htmlCanvas.SKGLView)
             return;
@@ -52,7 +72,7 @@ export class SKGLView {
         htmlCanvas.SKGLView.setEnableRenderLoop(enable);
     }
 
-    public constructor(element: HTMLCanvasElement, callback: DotNet.DotNetObject) {
+    public constructor(element: HTMLCanvasElement, callback: DotNet.DotNetObjectReference) {
         this.htmlCanvas = element;
 
         const ctx = this.createWebGLContext(this.htmlCanvas);
@@ -77,6 +97,10 @@ export class SKGLView {
         this.renderFrameCallback = callback;
     }
 
+    public deinit() {
+        this.setEnableRenderLoop(false);
+    }
+
     public requestAnimationFrame(renderLoop?: boolean, width?: number, height?: number) {
         // optionally update the render loop
         if (renderLoop !== undefined && this.renderLoopEnabled !== renderLoop)
@@ -94,6 +118,9 @@ export class SKGLView {
 
         // add the draw to the next frame
         this.renderLoopRequest = window.requestAnimationFrame(() => {
+            // make current
+            GL.makeContextCurrent(this.info.context);
+
             this.renderFrameCallback
                 .invokeMethodAsync('Invoke')
                 .then(() => {
@@ -111,6 +138,7 @@ export class SKGLView {
 
         // either start the new frame or cancel the existing one
         if (enable) {
+            console.info(`Enabling render loop with callback ${this.renderFrameCallback._id}...`);
             this.requestAnimationFrame();
         } else if (this.renderLoopRequest !== 0) {
             window.cancelAnimationFrame(this.renderLoopRequest);
