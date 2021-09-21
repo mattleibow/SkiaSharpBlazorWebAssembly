@@ -3,9 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31717.149
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "blazor-native", "blazor-native\blazor-native.csproj", "{9E2EAE6A-F845-4619-9388-DA08954DC0C6}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SkiaSharpSample", "blazor-native\SkiaSharpSample.csproj", "{9E2EAE6A-F845-4619-9388-DA08954DC0C6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SkiaSharp.Views.Blazor", "SkiaSharp.Views.Blazor\SkiaSharp.Views.Blazor.csproj", "{44901DA3-B5D8-46EA-A7E7-B0A7B1C08AA6}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SkiaSharp.Views.Blazor", "SkiaSharp.Views.Blazor\SkiaSharp.Views.Blazor.csproj", "{44901DA3-B5D8-46EA-A7E7-B0A7B1C08AA6}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

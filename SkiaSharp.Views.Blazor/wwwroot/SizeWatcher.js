@@ -10,7 +10,7 @@ export class SizeWatcher {
         };
         SizeWatcher.elements[elementId] = element;
         SizeWatcher.observer.observe(element);
-        SizeWatcher.invokeAsync(element);
+        SizeWatcher.invoke(element);
     }
     static unobserve(elementId) {
         if (!elementId || !SizeWatcher.observer)
@@ -27,15 +27,15 @@ export class SizeWatcher {
         SizeWatcher.elements = new Map();
         SizeWatcher.observer = new ResizeObserver((entries) => {
             for (let entry of entries) {
-                SizeWatcher.invokeAsync(entry.target);
+                SizeWatcher.invoke(entry.target);
             }
         });
     }
-    static invokeAsync(element) {
+    static invoke(element) {
         const watcherElement = element;
         const instance = watcherElement.SizeWatcher;
         if (!instance || !instance.callback)
             return;
-        return instance.callback.invokeMethodAsync('Invoke', element.clientWidth, element.clientHeight);
+        return instance.callback.invokeMethod('Invoke', element.clientWidth, element.clientHeight);
     }
 }

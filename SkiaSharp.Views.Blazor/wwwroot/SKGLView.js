@@ -76,14 +76,11 @@ export class SKGLView {
         this.renderLoopRequest = window.requestAnimationFrame(() => {
             // make current
             GL.makeContextCurrent(this.info.context);
-            this.renderFrameCallback
-                .invokeMethodAsync('Invoke')
-                .then(() => {
-                this.renderLoopRequest = 0;
-                // we may want to draw the next frame
-                if (this.renderLoopEnabled)
-                    this.requestAnimationFrame();
-            });
+            this.renderFrameCallback.invokeMethod('Invoke');
+            this.renderLoopRequest = 0;
+            // we may want to draw the next frame
+            if (this.renderLoopEnabled)
+                this.requestAnimationFrame();
         });
     }
     setEnableRenderLoop(enable) {
